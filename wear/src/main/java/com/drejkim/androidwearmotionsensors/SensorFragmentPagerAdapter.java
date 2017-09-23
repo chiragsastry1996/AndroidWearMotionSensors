@@ -9,7 +9,8 @@ public class SensorFragmentPagerAdapter extends FragmentGridPagerAdapter {
 
     private int[] sensorTypes = {
             Sensor.TYPE_ACCELEROMETER,
-            Sensor.TYPE_GYROSCOPE
+            Sensor.TYPE_GYROSCOPE,
+            Sensor.TYPE_HEART_RATE
     };
 
     public SensorFragmentPagerAdapter(FragmentManager fm) {

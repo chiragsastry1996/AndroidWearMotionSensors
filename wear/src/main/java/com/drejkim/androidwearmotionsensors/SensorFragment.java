@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.FloatMath;
+import android.util.MonthDisplayHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +17,10 @@ import android.widget.TextView;
 
 public class SensorFragment extends Fragment implements SensorEventListener {
 
-    private static final float SHAKE_THRESHOLD = 1.1f;
+    private static final float SHAKE_THRESHOLD = 2.20f;
     private static final int SHAKE_WAIT_TIME_MS = 250;
-    private static final float ROTATION_THRESHOLD = 2.0f;
+    private static final float ROTATION_THRESHOLD = 2.2f;
     private static final int ROTATION_WAIT_TIME_MS = 100;
-
     private View mView;
     private TextView mTextTitle;
     private TextView mTextValues;
@@ -29,7 +29,6 @@ public class SensorFragment extends Fragment implements SensorEventListener {
     private int mSensorType;
     private long mShakeTime = 0;
     private long mRotationTime = 0;
-
     public static SensorFragment newInstance(int sensorType) {
         SensorFragment f = new SensorFragment();
 
@@ -58,11 +57,9 @@ public class SensorFragment extends Fragment implements SensorEventListener {
                              Bundle savedInstanceState) {
 
         mView = inflater.inflate(R.layout.sensor, container, false);
-
         mTextTitle = (TextView) mView.findViewById(R.id.text_title);
         mTextTitle.setText(mSensor.getStringType());
         mTextValues = (TextView) mView.findViewById(R.id.text_values);
-
         return mView;
     }
 
@@ -86,29 +83,46 @@ public class SensorFragment extends Fragment implements SensorEventListener {
             return;
         }
 
-        mTextValues.setText(
-                "x = " + Float.toString(event.values[0]) + "\n" +
-                "y = " + Float.toString(event.values[1]) + "\n" +
-                "z = " + Float.toString(event.values[2]) + "\n"
-        );
+        if(event.sensor.getType() == Sensor.TYPE_HEART_RATE)
+        {
+            detectHeartRate(event);
+            mTextValues.setText("x = " + Float.toString(event.values[0]) + "\n");
 
-        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        }
+        else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            mTextValues.setText(
+                    "x = " + Float.toString(event.values[0]) + "\n" +
+                            "y = " + Float.toString(event.values[1]) + "\n" +
+                            "z = " + Float.toString(event.values[2]) + "\n"
+            );
             detectShake(event);
         }
         else if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             detectRotation(event);
+            mTextValues.setText(
+                    "x = " + Float.toString(event.values[0]) + "\n" +
+                            "y = " + Float.toString(event.values[1]) + "\n" +
+                            "z = " + Float.toString(event.values[2]) + "\n"
+            );
         }
+    }
+
+    private void detectHeartRate(SensorEvent event) {
+        float hr= event.values[0];
+        if(hr>100.0){
+            mView.setBackgroundColor(Color.rgb(100,0,0));
+        }
+        else{
+            mView.setBackgroundColor(Color.BLACK);
+        }
+
+
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-
-    // References:
-    //  - http://jasonmcreynolds.com/?p=388
-    //  - http://code.tutsplus.com/tutorials/using-the-accelerometer-on-android--mobile-22125
     private void detectShake(SensorEvent event) {
         long now = System.currentTimeMillis();
 
@@ -125,27 +139,21 @@ public class SensorFragment extends Fragment implements SensorEventListener {
             // Change background color if gForce exceeds threshold;
             // otherwise, reset the color
             if(gForce > SHAKE_THRESHOLD) {
-                mView.setBackgroundColor(Color.rgb(0, 100, 0));
+                mView.setBackgroundColor(Color.rgb(100, 0, 0));
             }
             else {
                 mView.setBackgroundColor(Color.BLACK);
             }
         }
     }
-
     private void detectRotation(SensorEvent event) {
         long now = System.currentTimeMillis();
-
         if((now - mRotationTime) > ROTATION_WAIT_TIME_MS) {
             mRotationTime = now;
-
-            // Change background color if rate of rotation around any
-            // axis and in any direction exceeds threshold;
-            // otherwise, reset the color
             if(Math.abs(event.values[0]) > ROTATION_THRESHOLD ||
                Math.abs(event.values[1]) > ROTATION_THRESHOLD ||
                Math.abs(event.values[2]) > ROTATION_THRESHOLD) {
-                mView.setBackgroundColor(Color.rgb(0, 100, 0));
+                mView.setBackgroundColor(Color.rgb(100, 0, 0));
             }
             else {
                 mView.setBackgroundColor(Color.BLACK);
@@ -153,3 +161,5 @@ public class SensorFragment extends Fragment implements SensorEventListener {
         }
     }
 }
+
+
